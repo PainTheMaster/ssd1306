@@ -10,11 +10,15 @@ void ssd1306_dot(i2c_master_dev_handle_t dev_handle, uint8_t i, uint8_t j);
 void ssd1306_output(i2c_master_dev_handle_t dev_handle);
 void circle(int rad, int i_cent, int j_cent);
 void charbitmap(uint8_t code, int row, int col);
+void cursor(const int row, const int col);
+void decursor(const int row, const int col);
 
 uint8_t cambus[64][128];
 
 void app_main(void)
 {
+    int i, j;
+
     i2c_master_bus_config_t i2c_mst_config = {
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .i2c_port = 0,
@@ -36,264 +40,63 @@ void app_main(void)
     i2c_master_dev_handle_t dev_handle;
     ESP_ERROR_CHECK(i2c_master_bus_add_device(bus_handle, &dev_cfg, &dev_handle));
 
-    
-    const uint8_t ctrl_cmd = 0x00;
-    const uint8_t ctrl_data = 0x40;
-
-    uint8_t buf_cmd[32];
-
-/*    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xaf; //on
-    buf_cmd[2] = 0xa5; //entire display on
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xae; //off
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xaf;
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xae;
-    buf_cmd[2] = 0x8d;
-    buf_cmd[3] = 0x14;    
-    i2c_master_transmit(dev_handle,buf_cmd, 4, -1);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xaf;
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);*/
-
-    uint8_t disp_buff1[132];
-    disp_buff1[0] = ctrl_data;
-    int i;
-    for (i=1; i <= 131; i++){
-        disp_buff1[i] = 0xff;
-    }
-
-    uint8_t disp_buff2[132];
-    disp_buff2[0] = ctrl_data;
-    for (i=1; i <= 131; i++){
-        disp_buff2[i] = 0x00;
-    }
-
-    uint8_t disp_buff3[132];
-    disp_buff3[0] = ctrl_data;
-    for (i=1; i <= 131; i++){
-        if(i%5==0){
-            disp_buff3[i] = 0xff;
-        }else{
-            disp_buff3[i] = 0x00;
-        }
-    }
-
     ssd1306_init(dev_handle);
-
-    vTaskDelay(pdMS_TO_TICKS(100));
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb0; //page0
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff1, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb1; //page1
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff2, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb2; //page2
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff1, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb3; //page3
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff3, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb4; //page4
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff3, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb5; //page5
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff1, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb6; //page6
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff2, 129, -1);
-
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0xb7; //page7
-    i2c_master_transmit(dev_handle,buf_cmd, 2, -1);
-    buf_cmd[0] = ctrl_cmd;
-    buf_cmd[1] = 0x00; 
-    buf_cmd[2] = 0x10;  //start seg 0
-    i2c_master_transmit(dev_handle,buf_cmd, 3, -1);
-    i2c_master_transmit(dev_handle,disp_buff1, 129, -1);
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    ssd1306_clear();
-    ssd1306_output(dev_handle);
-
-//    int i;
-    for(i=0; i<=63; i++){
-        ssd1306_dot(dev_handle, i, i);
-    }
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    ssd1306_clear();
-
-    int j;
-    for (i=0; i<=63; i++){
-        for(j=0; j <=127; j++){
-            cambus[i][j] = 0;
-        }
-        cambus[i][127-i] = 1;
-    }
-    ssd1306_output(dev_handle);
-    printf("line done\n");
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    for (i=0; i<=63; i++){
-        for(j=0; j <=63; j++){
-            cambus[i][j] = 1;
-        }
-        for(j=64; j <=127; j++){
-            cambus[i][j] = 0;
-        }
-    }
-    ssd1306_output(dev_handle);
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    for (i=0; i<=63; i++){
-        for(j=0; j <=127; j++){
-            cambus[i][j] = 0;
-        }
-    }
-    ssd1306_output(dev_handle);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    circle(5, 31, 63);
-    ssd1306_output(dev_handle);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    ssd1306_clear();
-    circle(10, 31, 63);
-    ssd1306_output(dev_handle);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    ssd1306_clear();
-    circle(20, 31, 63);
-    ssd1306_output(dev_handle);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    ssd1306_clear();
-    circle(40, 31, 63);
-    ssd1306_output(dev_handle);
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    ssd1306_clear();
-    ssd1306_output(dev_handle);
-
-    charbitmap('0', 0, 0);
-    charbitmap('1', 0, 8);    
-    charbitmap('2', 0, 16);
-    charbitmap('3', 0, 24);
-    charbitmap('4', 0, 32);
-    charbitmap('5', 0, 40);
-    charbitmap('6', 0, 48);
-    charbitmap('7', 0, 56);
-    charbitmap('8', 0, 64);
-    charbitmap('9', 0, 72);
-
     
+//    const uint8_t ctrl_cmd = 0x00;
+//    const uint8_t ctrl_data = 0x40;
 
-    charbitmap('A', 16, 0);
-    charbitmap('B', 16, 8);    
-    charbitmap('C', 16, 16);
-    charbitmap('D', 16, 24);
-    charbitmap('E', 16, 32);
-    charbitmap('F', 16, 40);
-    charbitmap('G', 16, 48);
-    charbitmap('H', 16, 56);
-    charbitmap('I', 16, 64);
-    charbitmap('J', 16, 72);
-    charbitmap('K', 16, 80);
-    charbitmap('L', 16, 88);
-    charbitmap('M', 16, 96);
-    charbitmap('N', 16, 104);
-    charbitmap('O', 16, 112);
-    charbitmap('P', 16, 120);
 
-    charbitmap('Q', 24, 0);
-    charbitmap('R', 24, 8);
-    charbitmap('S', 24, 16);
-    charbitmap('T', 24, 24);
-    charbitmap('U', 24, 32);
-    charbitmap('V', 24, 40);
-    charbitmap('W', 24, 48);
-    charbitmap('X', 24, 56);
-    charbitmap('Y', 24, 64);
-    charbitmap('Z', 24, 72);
-
-     
+    ssd1306_clear();
+//    circle(20, 32, 63);
     ssd1306_output(dev_handle);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    while(1) {
+        ssd1306_clear();
+        for(i=0; i<=9; i++){
+            decursor(0, 0);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(400));
+            cursor(0, 0);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(400));
+        }
+        
+
+        int row_char, col_char, row_curs, col_curs;
+        for (i=0x20; i<=0x7e; i++){
+            row_curs = (i+1-0x20)/16;
+            col_curs = (i+1-0x20)%16;        
+            row_char = (i-0x20)/16;
+            col_char = (i-0x20)%16;
+            cursor(row_curs*8, col_curs*8);
+            charbitmap(i, row_char*8, col_char*8);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            decursor(row_curs*8, col_curs*8);
+        }
+
+        for(i=0; i<= 9 ;i++){
+            cursor(row_curs*8, col_curs*8);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(400));
+            decursor(row_curs*8, col_curs*8);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(400));
+        }
+    }
 
 /*
-    ssd1306_clear();
-    int r, x, y, vx, vy;
-    r = 10;
-    x = r;
-    y = r;
-    vx=2;
-    vy=4;
-    while(true){
-        ssd1306_clear();
-        circle(r, y, x);
+    for(; ; ){
+        cursor(row_curs*8, col_curs*8);
         ssd1306_output(dev_handle);
-        if((x<=r && vx < 0) || ( 127-r<=x && vx>0)){
-            vx *= -1;
-        }
-        if((y<=r && vy < 0) || ( 63-r<=y && vy>0)){
-            vy *= -1;
-        }
-        x +=vx;
-        y +=vy;
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(400));
+        decursor(row_curs*8, col_curs*8);
+        ssd1306_output(dev_handle);
+        vTaskDelay(pdMS_TO_TICKS(400));
     }*/
+
+
 }
 
 
@@ -498,54 +301,54 @@ void circle(int rad, int i_cent, int j_cent){
 
 void charbitmap(const uint8_t code, const int row, const int col){
     static const uint8_t bitmap[128][8] = {
-        {}, //0x00
-        {}, //0x01
-        {}, //0x02
-        {}, //0x03
-        {}, //0x04
-        {}, //0x05
-        {}, //0x06
-        {}, //0x07
-        {}, //0x08
-        {}, //0x09
-        {}, //0x0a
-        {}, //0x0b
-        {}, //0x0c
-        {}, //0x0d
-        {}, //0x0e
-        {}, //0x0f
-        {}, //0x10
-        {}, //0x11
-        {}, //0x12
-        {}, //0x13
-        {}, //0x14
-        {}, //0x15
-        {}, //0x16
-        {}, //0x17
-        {}, //0x18
-        {}, //0x19
-        {}, //0x1a
-        {}, //0x1b
-        {}, //0x1c
-        {}, //0x1d
-        {}, //0x1e
-        {}, //0x1f
-        {}, //0x20
-        {}, //0x21
-        {}, //0x22
-        {}, //0x23
-        {}, //0x24
-        {}, //0x25
-        {}, //0x26
-        {}, //0x27
-        {}, //0x28
-        {}, //0x29
-        {}, //0x2a
-        {}, //0x2b
-        {}, //0x2c
-        {}, //0x2d
-        {}, //0x2e
-        {}, //0x2f
+        {}, //0x00, ''
+        {}, //0x01, ''
+        {}, //0x02, ''
+        {}, //0x03, ''
+        {}, //0x04, ''
+        {}, //0x05, ''
+        {}, //0x06, ''
+        {}, //0x07, ''
+        {}, //0x08, ''
+        {}, //0x09, ''
+        {}, //0x0a, ''
+        {}, //0x0b, ''
+        {}, //0x0c, ''
+        {}, //0x0d, ''
+        {}, //0x0e, ''
+        {}, //0x0f, ''
+        {}, //0x10, ''
+        {}, //0x11, ''
+        {}, //0x12, ''
+        {}, //0x13, ''
+        {}, //0x14, ''
+        {}, //0x15, ''
+        {}, //0x16, ''
+        {}, //0x17, ''
+        {}, //0x18, ''
+        {}, //0x19, ''
+        {}, //0x1a, ''
+        {}, //0x1b, ''
+        {}, //0x1c, ''
+        {}, //0x1d, ''
+        {}, //0x1e, ''
+        {}, //0x1f, ''
+        {0, 0, 0, 0, 0, 0, 0, 0}, //0x20, '' ' ' (white space)
+        {0, 0, 8, 92, 92, 8, 0, 0}, //0x21, '!'
+        {0, 2, 14, 0, 2, 14, 0, 0}, //0x22, '"'
+        {20, 127, 127, 20, 127, 127, 20, 0}, //0x23, '#'
+        {36, 46, 42, 127, 42, 58, 16, 0}, //0x24, '$'
+        {64, 108, 58, 30, 108, 86, 50, 0}, //0x25, '%'
+        {48, 122, 77, 77, 127, 50, 80, 0}, //0x26, '&'
+        {0, 0, 0, 5, 3, 0, 0, 0}, //0x27, '''
+        {0, 0, 28, 62, 99, 65, 0, 0}, //0x28, '('
+        {0, 0, 65, 99, 62, 28, 0, 0}, //0x29, ')'
+        {8, 42, 62, 28, 28, 62, 42, 8}, //0x2a, '*'
+        {0, 8, 8, 62, 62, 8, 8, 0}, //0x2b, '+'
+        {0, 0, 0, 160, 96, 0, 0, 0}, //0x2c, ','
+        {0, 8, 8, 8, 8, 8, 8, 0}, //0x2d, '-'
+        {0, 0, 0, 64, 64, 0, 0, 0}, //0x2e, '.'
+        {64, 96, 48, 24, 12, 6, 3, 1}, //0x2f, '/'
         {62, 127, 121, 77, 71, 127, 62, 0}, //0x30, '0'
         {0, 68, 70, 127, 127, 64, 64, 0}, //0x31, '1'
         {98, 115, 81, 89, 73, 111, 102, 0}, //0x32, '2'
@@ -556,13 +359,13 @@ void charbitmap(const uint8_t code, const int row, const int col){
         {3, 3, 113, 121, 13, 7, 3, 0}, //0x37, '7'
         {54, 127, 73, 73, 73, 127, 54, 0}, //0x38, '8'
         {38, 111, 73, 73, 73, 127, 62, 0}, //0x39, '9'
-        {}, //0x3a, ''
-        {}, //0x3b, ''
-        {}, //0x3c, ''
-        {}, //0x3d, ''
-        {}, //0x3e, ''
-        {}, //0x3f, ''
-        {}, //0x40, ''
+        {0, 0, 0, 34, 34, 0, 0, 0}, //0x3a, ':'
+        {0, 0, 0, 162, 98, 0, 0, 0}, //0x3b, ';'
+        {0, 0, 8, 28, 54, 99, 65, 0}, //0x3c, '<'
+        {0, 36, 36, 36, 36, 36, 36, 0}, //0x3d, '='
+        {0, 65, 99, 54, 28, 8, 0, 0}, //0x3e, '>'
+        {0, 2, 3, 81, 89, 15, 6, 0}, //0x3f, '?'
+        {62, 65, 73, 85, 85, 93, 30, 0}, //0x40, '@'
         {126, 127, 9, 9, 9, 127, 126, 0}, //0x41, 'A'
         {65, 127, 127, 73, 73, 127, 54, 0}, //0x42, 'B'
         {62, 127, 65, 65, 65, 99, 34, 0}, //0x43, 'C'
@@ -589,50 +392,71 @@ void charbitmap(const uint8_t code, const int row, const int col){
         {65, 99, 62, 28, 62, 99, 65, 0}, //0x58, 'X'
         {0, 7, 79, 120, 120, 79, 7, 0}, //0x59, 'Y'
         {71, 99, 113, 89, 77, 103, 115, 0}, //0x5a, 'Z'
-        {}, //0x5b, ''
-        {}, //0x5c, ''
-        {}, //0x5d, ''
-        {}, //0x5e, ''
-        {}, //0x5f, ''
-        {}, //0x60, ''
-        {}, //0x61, ''
-        {}, //0x62, ''
-        {}, //0x63, ''
-        {}, //0x64, ''
-        {}, //0x65, ''
-        {}, //0x66, ''
-        {}, //0x67, ''
-        {}, //0x68, ''
-        {}, //0x69, ''
-        {}, //0x6a, ''
-        {}, //0x6b, ''
-        {}, //0x6c, ''
-        {}, //0x6d, ''
-        {}, //0x6e, ''
-        {}, //0x6f, ''
-        {}, //0x70, ''
-        {}, //0x71, ''
-        {}, //0x72, ''
-        {}, //0x73, ''
-        {}, //0x74, ''
-        {}, //0x75, ''
-        {}, //0x76, ''
-        {}, //0x77, ''
-        {}, //0x78, ''
-        {}, //0x79, ''
-        {}, //0x7a, ''
-        {}, //0x7b, ''
-        {}, //0x7c, ''
-        {}, //0x7d, ''
-        {}, //0x7e, ''
-        {} //0x7f, ''
+        {0, 0, 127, 127, 65, 65, 0, 0}, //0x5b, '['
+        {1, 3, 6, 12, 24, 48, 96, 0}, //0x5c, '\'
+        {0, 0, 65, 65, 127, 127, 0, 0}, //0x5d, ']'
+        {8, 12, 6, 3, 6, 12, 8, 0}, //0x5e, '^'
+        {128, 128, 128, 128, 128, 128, 128, 0}, //0x5f, '_'
+        {0, 0, 0, 3, 5, 0, 0, 0}, //0x60, '''
+        {32, 116, 84, 84, 60, 120, 64, 0}, //0x61, 'a'
+        {1, 127, 127, 72, 72, 120, 48, 0}, //0x62, 'b'
+        {56, 124, 68, 68, 68, 108, 40, 0}, //0x63, 'c'
+        {48, 120, 72, 73, 63, 127, 64, 0}, //0x64, 'd'
+        {56, 124, 84, 84, 84, 92, 24, 0}, //0x65, 'e'
+        {0, 72, 126, 127, 73, 3, 2, 0}, //0x66, 'f'
+        {12, 94, 82, 82, 124, 62, 2, 0}, //0x67, 'g'
+        {65, 127, 127, 8, 4, 124, 120, 0}, //0x68, 'h'
+        {0, 0, 68, 125, 125, 64, 0, 0}, //0x69, 'i'
+        {0, 64, 192, 128, 136, 250, 122, 0}, //0x6a, 'j'
+        {65, 127, 127, 16, 56, 108, 68, 0}, //0x6b, 'k'
+        {0, 0, 65, 127, 127, 64, 0, 0}, //0x6c, 'l'
+        {124, 124, 8, 120, 12, 124, 112, 0}, //0x6d, 'm'
+        {4, 124, 120, 4, 4, 124, 120, 0}, //0x6e, 'n'
+        {56, 124, 68, 68, 68, 124, 56, 0}, //0x6f, 'o'
+        {132, 252, 248, 164, 36, 60, 24, 0}, //0x70, 'p'
+        {24, 60, 36, 164, 252, 252, 128, 0}, //0x71, 'q'
+        {68, 124, 120, 76, 4, 12, 12, 0}, //0x72, 'r'
+        {8, 92, 84, 84, 84, 116, 32, 0}, //0x73, 's'
+        {4, 4, 62, 127, 68, 36, 0, 0}, //0x74, 't'
+        {60, 124, 64, 64, 60, 124, 64, 0}, //0x75, 'u'
+        {12, 28, 48, 96, 48, 28, 12, 0}, //0x76, 'v'
+        {60, 124, 96, 56, 96, 124, 60, 0}, //0x77, 'w'
+        {68, 108, 56, 16, 56, 108, 68, 0}, //0x78, 'x'
+        {156, 188, 160, 160, 252, 124, 0, 0}, //0x79, 'y'
+        {0, 76, 100, 116, 92, 76, 100, 0}, //0x7a, 'z'
+        {0, 0, 8, 62, 119, 65, 65, 0}, //0x7b, '{'
+        {0, 0, 0, 119, 119, 0, 0, 0}, //0x7c, '|'
+        {0, 65, 65, 119, 62, 8, 0, 0}, //0x7d, '}'
+        {2, 3, 1, 3, 2, 3, 1, 0}, //0x7e, '~'
+        {} //0x7f, (DEL)
     };
 
     int i, j;
     for (j=0; j <=7; j++){
         for (i=0; i <=7; i++){
             cambus[row+i][col+j]=(bitmap[code][j]>>i)&((uint8_t)(1));
-            printf("i %d, j %d\n", row+i, col+j);
+        }
+    }
+}
+
+void cursor(const int row, const int col){
+    int i, j;
+    for(j=0; j <=6; j++){
+        for(i=0; i<=7; i++){
+            cambus[row+i][col+j]=1;
+        }
+    }
+    j=7;
+    for(i=0; i<=7; i++){
+        cambus[row+i][col+j]=0;
+    }
+}
+
+void decursor(const int row, const int col){
+    int i, j;
+    for(j=0; j <=7; j++){
+        for(i=0; i<=7; i++){
+            cambus[row+i][col+j]=0;
         }
     }
 }
