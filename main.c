@@ -12,6 +12,7 @@ void circle(int rad, int i_cent, int j_cent);
 void charbitmap(uint8_t code, int row, int col);
 void cursor(const int row, const int col);
 void decursor(const int row, const int col);
+int print_str(int *row_start, int *col_start, const uint8_t *str, i2c_master_dev_handle_t dev_handle);
 
 uint8_t cambus[64][128];
 
@@ -53,7 +54,7 @@ void app_main(void)
 
     while(1) {
         ssd1306_clear();
-        for(i=0; i<=9; i++){
+        for(i=0; i<=3; i++){
             decursor(0, 0);
             ssd1306_output(dev_handle);
             vTaskDelay(pdMS_TO_TICKS(400));
@@ -65,22 +66,41 @@ void app_main(void)
 
         int row_char, col_char, row_curs, col_curs;
         for (i=0x20; i<=0x7e; i++){
-            row_curs = (i+1-0x20)/16;
-            col_curs = (i+1-0x20)%16;        
-            row_char = (i-0x20)/16;
-            col_char = (i-0x20)%16;
-            cursor(row_curs*8, col_curs*8);
-            charbitmap(i, row_char*8, col_char*8);
+            row_curs = ((i+1-0x20)/16)*8;
+            col_curs = ((i+1-0x20)%16)*8;        
+            row_char = ((i-0x20)/16)*8;
+            col_char = ((i-0x20)%16)*8;
+            cursor(row_curs, col_curs);
+            charbitmap(i, row_char, col_char);
             ssd1306_output(dev_handle);
             vTaskDelay(pdMS_TO_TICKS(100));
-            decursor(row_curs*8, col_curs*8);
+            decursor(row_curs, col_curs);
         }
 
-        for(i=0; i<= 9 ;i++){
-            cursor(row_curs*8, col_curs*8);
+
+        for(i=0; i<= 2; i++){
+            cursor(row_curs, col_curs);
             ssd1306_output(dev_handle);
             vTaskDelay(pdMS_TO_TICKS(400));
-            decursor(row_curs*8, col_curs*8);
+            decursor(row_curs, col_curs);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(400));
+        }
+
+        ssd1306_clear();
+        ssd1306_output(dev_handle);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+
+        row_curs = 0;
+        col_curs = 0;
+        uint8_t msg[] = "Powered by\nKen Yamashita\nsample@email.com";
+        print_str(&row_curs, &col_curs, msg, dev_handle);
+
+        for(i=0; i<= 3; i++){
+            cursor(row_curs, col_curs);
+            ssd1306_output(dev_handle);
+            vTaskDelay(pdMS_TO_TICKS(400));
+            decursor(row_curs, col_curs);
             ssd1306_output(dev_handle);
             vTaskDelay(pdMS_TO_TICKS(400));
         }
@@ -432,8 +452,8 @@ void charbitmap(const uint8_t code, const int row, const int col){
     };
 
     int i, j;
-    for (j=0; j <=7; j++){
-        for (i=0; i <=7; i++){
+    for (j=0; j <=7 && col+j <=127; j++){
+        for (i=0; i <=7 && row+i <= 63; i++){
             cambus[row+i][col+j]=(bitmap[code][j]>>i)&((uint8_t)(1));
         }
     }
@@ -441,22 +461,53 @@ void charbitmap(const uint8_t code, const int row, const int col){
 
 void cursor(const int row, const int col){
     int i, j;
-    for(j=0; j <=6; j++){
-        for(i=0; i<=7; i++){
+    for(j=0; j <=6 && col+j <= 127; j++){
+        for(i=0; i<=6 && row+i <=63; i++){
             cambus[row+i][col+j]=1;
         }
+        cambus[row+7][col+j] = 0;
     }
     j=7;
-    for(i=0; i<=7; i++){
+    for(i=0; i<=7 && row+i <= 63 && col+j<=127; i++){
         cambus[row+i][col+j]=0;
     }
 }
 
 void decursor(const int row, const int col){
     int i, j;
-    for(j=0; j <=7; j++){
-        for(i=0; i<=7; i++){
+    for(j=0; j <=7 && col+j <= 127; j++){
+        for(i=0; i<=7 && row+i <=63; i++){
             cambus[row+i][col+j]=0;
         }
     }
+}
+
+int print_str(int *row_start, int *col_start, const uint8_t *str, i2c_master_dev_handle_t dev_handle){
+    int i, row_cursor, col_cursor;
+    row_cursor = *row_start;
+    col_cursor = *col_start;
+
+    for(i=0; row_cursor <=63 && str[i] != '\0'; i++){
+        if(str[i]=='\n'){
+            decursor(row_cursor, col_cursor);
+            row_cursor +=8;
+            col_cursor = 0;
+        }else{
+            charbitmap(str[i], row_cursor, col_cursor);
+
+            col_cursor +=8;
+        }
+        if(col_cursor > 127){
+            col_cursor = 0;
+            row_cursor += 8;
+        }
+        cursor(row_cursor, col_cursor);
+        ssd1306_output(dev_handle);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    *row_start = row_cursor;
+    *col_start = col_cursor;
+
+    return i;
 }
