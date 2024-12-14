@@ -57,10 +57,10 @@ void app_main(void)
         for(i=0; i<=3; i++){
             decursor(0, 0);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(400));
+            vTaskDelay(pdMS_TO_TICKS(200));
             cursor(0, 0);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(400));
+            vTaskDelay(pdMS_TO_TICKS(200));
         }
         
 
@@ -73,18 +73,18 @@ void app_main(void)
             cursor(row_curs, col_curs);
             charbitmap(i, row_char, col_char);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(5));
             decursor(row_curs, col_curs);
         }
 
 
-        for(i=0; i<= 2; i++){
+        for(i=0; i<= 9; i++){
             cursor(row_curs, col_curs);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(400));
+            vTaskDelay(pdMS_TO_TICKS(200));
             decursor(row_curs, col_curs);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(400));
+            vTaskDelay(pdMS_TO_TICKS(200));
         }
 
         ssd1306_clear();
@@ -96,13 +96,13 @@ void app_main(void)
         uint8_t msg[] = "Powered by\nKen Yamashita\nsample@email.com";
         print_str(&row_curs, &col_curs, msg, dev_handle);
 
-        for(i=0; i<= 3; i++){
+        for(i=0; i<= 9; i++){
             cursor(row_curs, col_curs);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(400));
+            vTaskDelay(pdMS_TO_TICKS(200));
             decursor(row_curs, col_curs);
             ssd1306_output(dev_handle);
-            vTaskDelay(pdMS_TO_TICKS(400));
+            vTaskDelay(pdMS_TO_TICKS(200));
         }
     }
 
@@ -503,7 +503,7 @@ int print_str(int *row_start, int *col_start, const uint8_t *str, i2c_master_dev
         }
         cursor(row_cursor, col_cursor);
         ssd1306_output(dev_handle);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(5));
     }
 
     *row_start = row_cursor;
